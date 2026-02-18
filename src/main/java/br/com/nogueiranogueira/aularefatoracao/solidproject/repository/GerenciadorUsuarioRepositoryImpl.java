@@ -41,7 +41,8 @@ public class GerenciadorUsuarioRepositoryImpl implements GerenciadorUsuarioRepos
     @Override
     public long contarUsuariosPorTipo(String tipoUsuario) {
         // Implementação de contagem de usuários por tipo
-        return usuarioRepository.countByTipo(tipoUsuario);
+        //return usuarioRepository.countByTipo(tipoUsuario);
+        throw new UnsupportedOperationException("Não suportado"); //pronto
     }
 
     @Override
