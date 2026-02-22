@@ -6,44 +6,31 @@ import br.com.nogueiranogueira.aularefatoracao.solidproject.repository.UsuarioRe
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class GerenciadorUsuarioService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    // O Spring pega todas as classes que implementam RegraUsuario e tem @Component
+    // e joga automaticamente dentro desta lista!
+    @Autowired
+    private List<RegraUsuario> regrasUsuario;
+
     public Usuario criarUsuario(UsuarioDTO dto) {
-        String tipo = dto.tipo();
 
-        if ("COMUM".equals(tipo)) {
-            // Regras para usuário comum
-            validarEmail(dto.email());
-            Usuario usuario = new Usuario(dto.nome(), dto.email(), dto.tipo());
-            usuario.setPontos(0);
-            return usuarioRepository.save(usuario);
-
-        } else if ("VIP".equals(tipo)) {
-            // Regras para usuário VIP
-            validarEmail(dto.email());
-            validarIdade(dto.idade());
-            Usuario usuario = new Usuario(dto.nome(), dto.email(), dto.tipo());
-            usuario.setPontos(100);
-            return usuarioRepository.save(usuario);
-
-        } else {
-            throw new IllegalArgumentException("Tipo inválido");
+        for (RegraUsuario regra : regrasUsuario) {
+            if (regra.aceita(dto.tipo())) {
+                // A regra constrói e valida o usuário
+                Usuario usuarioProcessado = regra.processar(dto);
+                // O Service apenas salva no banco
+                return usuarioRepository.save(usuarioProcessado);
+            }
         }
-    }
 
-    private void validarEmail(String email) {
-        if (email == null || !email.contains("@")) {
-            throw new IllegalArgumentException("E-mail inválido");
-        }
-    }
-
-    private void validarIdade(int idade){
-        if (idade < 18) {
-            throw new IllegalArgumentException("Usuário deve ser maior de idade");
-        }
+        // Se passar por todas as regras e nenhuma aceitar:
+        throw new IllegalArgumentException("Tipo inválido");
     }
 }
